@@ -1,6 +1,6 @@
 streamlit==1.44.1
 streamlit-webrtc
-opencv-python-headless==4.11.0.86  # Avoid the full opencv to reduce dependency issues
+opencv-python-headless==4.5.5.64
 mediapipe==0.10.21
 tensorflow==2.18.0
 numpy==1.26.4
