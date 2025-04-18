@@ -20,7 +20,6 @@ CLASSES = [
     "Mawjou3", "Met9alla9", "Nadhafli", "Skhont", "Aychek", "Yezzini"
 ]
 MODEL_PATH = "model.h5"
-OUTPUT_FOLDER = "LipReading"
 IMG_SIZE = (64, 64)
 GRID_SIZE = (4, 10)
 
@@ -43,9 +42,9 @@ def detect_lips(frame, face_mesh):
         return None
     for face_landmarks in results.multi_face_landmarks:
         h, w, _ = frame.shape
-        lip_points = np.array([
-            (int(face_landmarks.landmark[idx].x * w), int(face_landmarks.landmark[idx].y * h))
-            for idx in LIPS_LANDMARKS
+        lip_points = np.array([ 
+            (int(face_landmarks.landmark[idx].x * w), int(face_landmarks.landmark[idx].y * h)) 
+            for idx in LIPS_LANDMARKS 
         ])
         x, y, w_, h_ = cv2.boundingRect(lip_points)
         if w_ > 0 and h_ > 0:
@@ -54,7 +53,7 @@ def detect_lips(frame, face_mesh):
             return lips if lips.size > 0 else None
     return None
 
-def process_video(video_path, output_folder, grid_size=GRID_SIZE, img_size=IMG_SIZE):
+def process_video(video_path, grid_size=GRID_SIZE, img_size=IMG_SIZE):
     mp_face_mesh = mp.solutions.face_mesh
     face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refine_landmarks=True)
     cap = cv2.VideoCapture(video_path)
@@ -82,10 +81,11 @@ def process_video(video_path, output_folder, grid_size=GRID_SIZE, img_size=IMG_S
         ]
         grid_image = np.vstack(rows)
         grid_image = cv2.resize(grid_image, (320, 320))  # Smaller matrix
-        os.makedirs(output_folder, exist_ok=True)
-        output_path = os.path.join(output_folder, f"{video_name}_lips.jpg")
-        cv2.imwrite(output_path, grid_image)
-        return output_path
+
+        # Convert to base64 string for display
+        _, img_encoded = cv2.imencode('.jpg', grid_image)
+        img_base64 = base64.b64encode(img_encoded).decode('utf-8')
+        return img_base64
     return None
 
 def load_image_as_base64(image_path):
@@ -175,10 +175,10 @@ if tab == "Main":
     if st.button("🧩 Generate Lip Matrix"):
         if st.session_state.video_path:
             with st.spinner("Generating Lip Matrix..."):
-                matrix_path = process_video(st.session_state.video_path, OUTPUT_FOLDER)
-            if matrix_path:
-                st.session_state.matrix_path = matrix_path
-                st.image(matrix_path, caption="🧠 Lip Matrix", use_container_width=False, width=320)
+                img_base64 = process_video(st.session_state.video_path)
+            if img_base64:
+                st.session_state.matrix_path = img_base64
+                st.image(f"data:image/jpeg;base64,{img_base64}", caption="🧠 Lip Matrix", use_container_width=False, width=320)
             else:
                 st.warning("⚠️ No lips detected.")
         else:
