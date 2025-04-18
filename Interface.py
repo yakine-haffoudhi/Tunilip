@@ -110,7 +110,7 @@ st.markdown(
             color: white;
             border-radius: 10px;
             padding: 10px 20px;
-            font-size: 20px;
+            font-size: 30px;
         }}
         .stButton>button:hover {{
             background-color: #FF4500;
@@ -200,7 +200,7 @@ if tab == "Main":
 
     st.markdown("""
     <footer style="text-align: center; font-size: 20px; color: #999;">
-        Created by Yakine Haffoudhi and Manar Aljene
+        Created by IEEE SIGHT ENIT
     </footer>
     """, unsafe_allow_html=True)
 
@@ -208,27 +208,34 @@ if tab == "Main":
 else:
     st.markdown("## 1️⃣ What is **TUNILip**?")
     st.markdown("""
-    **TUNILip** (Tunisian Dialect Lip Reading) is an AI-powered application created by **Yakine Haffoudhi** and **Manar Aljene**.  
-    It helps people with hearing impairments by recognizing Tunisian dialect words from lip movements.
-    """)
+        <div style="font-size: 20px;">
+            <strong>TUNILip</strong> is an innovative AI-powered application created by <strong>IEEE SIGHT ENIT</strong>.<br>
+            It aims to recognize Tunisian dialect words from lip movements, offering accessibility tools for people with hearing impairments.
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.image("sight.jpg", use_container_width=True)
+
+    st.markdown("""
+        <div style="font-size: 20px;">
+            This project combines Computer Vision and Deep Learning techniques to detect and interpret lip movements in real-time videos or uploaded files.
+        </div>
+    """, unsafe_allow_html=True)
+
 
     st.markdown("## 2️⃣ How It Works 🎥")
     st.video("Tunilip.mp4")
 
     st.markdown("## 3️⃣ Tips 📝")
     st.markdown("""
-    - Ensure proper lighting.
-    - Look directly at the camera.
-    - Avoid background distractions.
-    - Speak slowly and clearly.
-    """)
+    
+    <div style="font-size: 20px;">
+    - Ensure proper lighting.<br>
+    - Look directly at the camera.<br>
+    - Avoid background distractions.<br>
+    - Speak slowly and clearly.<br>
+      </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("## 4️⃣ Let’s Try! 🚀")
-    if st.button("Go to Main Page"):
-        st.experimental_set_query_params(page="main")
-        st.rerun()
-
-
-
-
-
+    st.button("Go to Main Page")
