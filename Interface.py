@@ -19,8 +19,8 @@ CLASSES = [
     "Aaslema", "Aatchan", "Ghatini", "Hamdoulah", "Inchallah", "Ji3an", "Mahsour",
     "Mawjou3", "Met9alla9", "Nadhafli", "Skhont", "Aychek", "Yezzini"
 ]
-MODEL_PATH = "TunilipAPP/model.h5"
-OUTPUT_FOLDER = "TunilipAPP/lipReading"
+MODEL_PATH = "model.h5"
+OUTPUT_FOLDER = "LipReading"
 IMG_SIZE = (64, 64)
 GRID_SIZE = (4, 10)
 
@@ -120,7 +120,7 @@ st.markdown(
 )
 
 # --- Sidebar ---
-logo_path = "TunilipAPP/Logo.png"
+logo_path = "Logo.png"
 logo_base64 = load_image_as_base64(logo_path)
 st.sidebar.markdown(
     f"""
@@ -213,7 +213,7 @@ else:
     """)
 
     st.markdown("## 2️⃣ How It Works 🎥")
-    st.video("TunilipAPP/Tunilip.mp4")
+    st.video("Tunilip.mp4")
 
     st.markdown("## 3️⃣ Tips 📝")
     st.markdown("""
