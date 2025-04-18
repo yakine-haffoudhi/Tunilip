@@ -1,5 +1,6 @@
+python==3.11
 streamlit==1.33.0
-opencv-python==4.9.0.80
+opencv-python==4.6.0.66
 mediapipe==0.10.21
 tensorflow==2.18.0
 numpy==1.26.4
