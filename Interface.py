@@ -22,220 +22,103 @@ CLASSES = [
 MODEL_PATH = "model.h5"
 OUTPUT_FOLDER = "LipReading"
 IMG_SIZE = (64, 64)
-GRID_SIZE = (4, 10)
 
 # --- Load Model ---
 model = load_model(MODEL_PATH)
 
 # --- Session State Initialization ---
-if "video_path" not in st.session_state:
-    st.session_state.video_path = None
-if "matrix_path" not in st.session_state:
-    st.session_state.matrix_path = None
-if "stop" not in st.session_state:
-    st.session_state.stop = False
+if "frame" not in st.session_state:
+    st.session_state.frame = None
 
 # --- Functions ---
 def detect_lips(frame, face_mesh):
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = face_mesh.process(rgb_frame)
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = face_mesh.process(rgb)
     if not results.multi_face_landmarks:
         return None
-    for face_landmarks in results.multi_face_landmarks:
+    for f in results.multi_face_landmarks:
         h, w, _ = frame.shape
-        lip_points = np.array([
-            (int(face_landmarks.landmark[idx].x * w), int(face_landmarks.landmark[idx].y * h))
-            for idx in LIPS_LANDMARKS
-        ])
-        x, y, w_, h_ = cv2.boundingRect(lip_points)
-        if w_ > 0 and h_ > 0:
-            lips = frame[y:y + h_, x:x + w_]
-            lips = cv2.resize(lips, IMG_SIZE, interpolation=cv2.INTER_CUBIC)
-            return lips if lips.size > 0 else None
+        pts = np.array([(int(f.landmark[i].x*w), int(f.landmark[i].y*h)) for i in LIPS_LANDMARKS])
+        x,y,ww,hh = cv2.boundingRect(pts)
+        if ww>0 and hh>0:
+            crop = frame[y:y+hh, x:x+ww]
+            return cv2.resize(crop, IMG_SIZE, interpolation=cv2.INTER_CUBIC)
     return None
 
-def process_video(video_path, output_folder, grid_size=GRID_SIZE, img_size=IMG_SIZE):
-    mp_face_mesh = mp.solutions.face_mesh
-    face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refine_landmarks=True)
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        return None
-    video_name = os.path.basename(video_path).split('.')[0]
-    lip_images = []
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        lip_frame = detect_lips(frame, face_mesh)
-        if lip_frame is not None:
-            resized = cv2.resize(lip_frame, img_size, interpolation=cv2.INTER_CUBIC)
-            lip_images.append(resized)
-        if len(lip_images) >= grid_size[0] * grid_size[1]:
-            break
-    cap.release()
-    if lip_images:
-        while len(lip_images) < grid_size[0] * grid_size[1]:
-            lip_images.append(lip_images[0])
-        rows = [
-            np.hstack(lip_images[i * grid_size[1]:(i + 1) * grid_size[1]])
-            for i in range(grid_size[0])
-        ]
-        grid_image = np.vstack(rows)
-        grid_image = cv2.resize(grid_image, (320, 320))  # Smaller matrix
-        os.makedirs(output_folder, exist_ok=True)
-        output_path = os.path.join(output_folder, f"{video_name}_lips.jpg")
-        cv2.imwrite(output_path, grid_image)
-        return output_path
-    return None
+# --- Background & Styling ---
+def load_b64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
-def load_image_as_base64(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    return encoded_string
-
-# --- Background Setup ---
-background_image_path = "BG (1).png"
-background_base64 = load_image_as_base64(background_image_path)
-
-st.markdown(
-    f"""
-    <style>
-        .stApp {{
-            background-image: url("data:image/jpeg;base64,{background_base64}");
-            background-size: cover;
-            background-position: center;
-        }}
-        .stButton>button {{
-            background-color: #FF6347;
-            color: white;
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-size: 30px;
-        }}
-        .stButton>button:hover {{
-            background-color: #FF4500;
-        }}
-    </style>
-    """, unsafe_allow_html=True
-)
+bg = load_b64("BG (1).png")
+st.markdown(f"""
+<style>
+  .stApp {{ background-image: url('data:image/png;base64,{bg}'); background-size: cover; }}
+  .stButton>button {{ background-color: #FF6347; color:#fff; font-size:20px; border-radius:8px; padding:8px 16px; }}
+  .stButton>button:hover {{ background-color:#FF4500; }}
+</style>
+""", unsafe_allow_html=True)
 
 # --- Sidebar ---
-logo_path = "Logo.png"
-logo_base64 = load_image_as_base64(logo_path)
-st.sidebar.markdown(
-    f"""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <img src="data:image/png;base64,{logo_base64}" width="250" />
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+logo = load_b64("Logo.png")
+st.sidebar.markdown(f"<div style='text-align:center;'><img src='data:image/png;base64,{logo}' width=200></div>", unsafe_allow_html=True)
 st.sidebar.title("Navigation Bar")
-tab = st.sidebar.radio("Go to", ["How to Use", "Main"])
+tab = st.sidebar.radio("Go to", ["What is TUNILip?","How to Use","Main"])
 
-# --- Main Tab ---
-if tab == "Main":
+# --- What is TUNILip ---
+if tab=="What is TUNILip?":
+    st.markdown("## 📌 What is **TUNILip**?")
+    st.markdown("""
+    <div style='font-size:18px;'>
+      <strong>TUNILip</strong> is an AI-powered app by <strong>IEEE SIGHT ENIT</strong>.<br>
+      It recognizes Tunisian dialect words from lip movements to assist those with hearing impairments.
+    </div>
+    """, unsafe_allow_html=True)
+    st.image("sight.jpg", use_container_width=True)
+    st.markdown("""
+    <div style='font-size:18px;'>
+      Combines Computer Vision and Deep Learning to detect and interpret lip movements in real-time or from uploads.
+    </div>
+    """, unsafe_allow_html=True)
+
+# --- How to Use ---
+elif tab=="How to Use":
+    st.markdown("## 🚀 How to Use TUNILip")
+    st.markdown("1. Click 'Main' tab and take a snapshot or upload an image/video.\n2. Click 'Generate Lip Matrix' to crop lips.\n3. Click 'Get Result' to see the predicted word.")
+
+# --- Main ---
+else:
     st.title("TUNILip")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("🎥 Start Video"):
-            tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.avi')
-            st.session_state.video_path = tmp_file.name
-
-            cap = cv2.VideoCapture(0)
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter(tmp_file.name, fourcc, 20.0, (640, 480))
-
-            stframe = st.empty()
-            st.info("🎥 Recording for 2 seconds...")
-
-            frame_count = 0
-            max_frames = 2 * 20  # 2 seconds at 20 fps
-            while frame_count < max_frames:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                out.write(frame)
-                stframe.image(frame, channels="BGR", use_container_width=False, width=320)
-                frame_count += 1
-
-            cap.release()
-            out.release()
-            st.success("✅ Video recorded for 2 seconds successfully.")
-
-    video_file = st.file_uploader("📤 Upload a video", type=["mp4", "avi"])
-    if video_file:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(video_file.read())
-            st.session_state.video_path = tmp_file.name
-        st.success("Video uploaded successfully!")
+    # camera capture
+    img_in = st.camera_input("📷 Capture your lips")
+    if img_in:
+        data = img_in.read()
+        arr = np.frombuffer(data, np.uint8)
+        frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        st.session_state.frame = frame
+        st.image(frame, caption="Captured frame", width=320)
 
     if st.button("🧩 Generate Lip Matrix"):
-        if st.session_state.video_path:
-            with st.spinner("Generating Lip Matrix..."):
-                matrix_path = process_video(st.session_state.video_path, OUTPUT_FOLDER)
-            if matrix_path:
-                st.session_state.matrix_path = matrix_path
-                st.image(matrix_path, caption="🧠 Lip Matrix", use_container_width=False, width=320)
+        if st.session_state.frame is not None:
+            with st.spinner("Processing..."):
+                mesh = mp.solutions.face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=True)
+                lip = detect_lips(st.session_state.frame, mesh)
+            if lip is not None:
+                st.image(lip, caption="Lip crop", width=320)
+                st.session_state.lip = lip
             else:
                 st.warning("⚠️ No lips detected.")
         else:
-            st.warning("⚠️ Please record or upload a video first.")
+            st.warning("⚠️ Please capture an image first.")
 
     if st.button("📊 Get Result"):
-        if st.session_state.matrix_path:
-            img = cv2.imread(st.session_state.matrix_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            img = cv2.resize(img, IMG_SIZE)
-            img = np.expand_dims(img, axis=-1) / 255.0
-            img = np.expand_dims(img, axis=0)
-            prediction = model.predict(img)
-            predicted_class = np.argmax(prediction)
-            predicted_word = CLASSES[predicted_class]
-            st.success(f"🗣️ Detected Word: **{predicted_word}**")
+        if hasattr(st.session_state, 'lip'):
+            gray = cv2.cvtColor(st.session_state.lip, cv2.COLOR_BGR2GRAY)
+            in_img = gray.reshape((1,)+IMG_SIZE+(1,))/255.0
+            pred = model.predict(in_img)
+            word = CLASSES[np.argmax(pred)]
+            st.success(f"🗣️ Detected Word: **{word}**")
         else:
-            st.warning("⚠️ Generate the lip matrix first.")
+            st.warning("⚠️ Generate a lip matrix first.")
 
-    st.markdown("""
-    <footer style="text-align: center; font-size: 20px; color: #999;">
-        Created by IEEE SIGHT ENIT
-    </footer>
-    """, unsafe_allow_html=True)
-
-# --- How to Use Tab ---
-else:
-    st.markdown("## 1️⃣ What is **TUNILip**?")
-    st.markdown("""
-        <div style="font-size: 20px;">
-            <strong>TUNILip</strong> is an innovative AI-powered application created by <strong>IEEE SIGHT ENIT</strong>.<br>
-            It aims to recognize Tunisian dialect words from lip movements, offering accessibility tools for people with hearing impairments.
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.image("sight.jpg", use_container_width=True)
-
-    st.markdown("""
-        <div style="font-size: 20px;">
-            This project combines Computer Vision and Deep Learning techniques to detect and interpret lip movements in real-time videos or uploaded files.
-        </div>
-    """, unsafe_allow_html=True)
-
-
-    st.markdown("## 2️⃣ How It Works 🎥")
-    st.video("Tunilip.mp4")
-
-    st.markdown("## 3️⃣ Tips 📝")
-    st.markdown("""
-    
-    <div style="font-size: 20px;">
-    - Ensure proper lighting.<br>
-    - Look directly at the camera.<br>
-    - Avoid background distractions.<br>
-    - Speak slowly and clearly.<br>
-      </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("## 4️⃣ Let’s Try! 🚀")
-    st.button("Go to Main Page")
+    st.markdown("<footer style='text-align:center;color:#999;'>Created by IEEE SIGHT ENIT</footer>", unsafe_allow_html=True)
