@@ -57,24 +57,51 @@ def process_video(video_path, grid_size=GRID_SIZE, img_size=IMG_SIZE):
     mp_face_mesh = mp.solutions.face_mesh
     face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refine_landmarks=True)
     cap = cv2.VideoCapture(video_path)
+    
+    # Check if the video is opened successfully
     if not cap.isOpened():
+        st.error("Error: Video file not found or cannot be opened.")
         return None
+    
     video_name = os.path.basename(video_path).split('.')[0]
     lip_images = []
+    last_valid_frame = None  # Track the last valid frame
+    
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
+            st.warning("Warning: No frames read from the video.")
             break
+        
+        # Check if the frame is empty (None or size 0)
+        if frame is None or frame.size == 0:
+            st.warning("Warning: Empty frame detected, using the last valid frame for padding.")
+            if last_valid_frame is not None:
+                frame = last_valid_frame  # Use the last valid frame for padding
+            else:
+                continue  # Skip this iteration if no valid frame is available
+        
+        # Process the frame and detect lips
         lip_frame = detect_lips(frame, face_mesh)
         if lip_frame is not None:
             resized = cv2.resize(lip_frame, img_size, interpolation=cv2.INTER_CUBIC)
             lip_images.append(resized)
+        
+        # Update the last valid frame for padding purposes
+        last_valid_frame = frame
+
+        # Stop when enough frames are collected
         if len(lip_images) >= grid_size[0] * grid_size[1]:
             break
+    
     cap.release()
+    
     if lip_images:
+        # Ensure grid size is met by duplicating frames if needed
         while len(lip_images) < grid_size[0] * grid_size[1]:
-            lip_images.append(lip_images[0])
+            lip_images.append(lip_images[0])  # Duplicate the first frame to complete the grid
+        
+        # Combine frames into a grid
         rows = [
             np.hstack(lip_images[i * grid_size[1]:(i + 1) * grid_size[1]])
             for i in range(grid_size[0])
@@ -86,6 +113,8 @@ def process_video(video_path, grid_size=GRID_SIZE, img_size=IMG_SIZE):
         _, img_encoded = cv2.imencode('.jpg', grid_image)
         img_base64 = base64.b64encode(img_encoded).decode('utf-8')
         return img_base64
+    
+    st.warning("No lips detected.")
     return None
 
 def load_image_as_base64(image_path):
