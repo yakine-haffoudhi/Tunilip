@@ -30,8 +30,6 @@ model = load_model(MODEL_PATH)
 # --- Session State Initialization ---
 if "video_path" not in st.session_state:
     st.session_state.video_path = None
-if "matrix_path" not in st.session_state:
-    st.session_state.matrix_path = None
 if "stop" not in st.session_state:
     st.session_state.stop = False
 
