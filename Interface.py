@@ -19,8 +19,8 @@ CLASSES = [
     "Aaslema", "Aatchan", "Ghatini", "Hamdoulah", "Inchallah", "Ji3an", "Mahsour",
     "Mawjou3", "Met9alla9", "Nadhafli", "Skhont", "Aychek", "Yezzini"
 ]
-MODEL_PATH = "F:/Projects/lipReading/model.h5"
-OUTPUT_FOLDER = "F:/Projects/lipReading"
+MODEL_PATH = "model.h5"
+OUTPUT_FOLDER = "lipReading"
 IMG_SIZE = (64, 64)
 GRID_SIZE = (4, 10)
 
@@ -131,7 +131,7 @@ st.markdown(
 )
 
 # --- Sidebar Logo and Navigation ---
-logo_path = "F:/Projects/lipReading/Logo.png"  # Make sure this file exists in your project directory
+logo_path = "Logo.png"  # Make sure this file exists in your project directory
 logo_base64 = load_image_as_base64(logo_path)
 
 st.sidebar.markdown(
@@ -226,7 +226,7 @@ else:
     """)
 
     st.markdown("## 2️⃣ How It Works 🎥")
-    st.video("F:/Projects/lipReading/Tunilip.mp4")  # Replace with your real video
+    st.video("Tunilip.mp4")  # Replace with your real video
 
     st.markdown("## 3️⃣ Tips 📝")
     st.markdown("""
